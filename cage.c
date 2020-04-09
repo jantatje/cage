@@ -75,7 +75,7 @@ handle_output_new(struct wl_listener *listener, void *data)
 	struct cg_server *server = wl_container_of(listener, server, output_new);
 	struct wlr_output *wlr_output = data;
 
-	struct cg_output *output = output_init(server, wlr_output, server->output_transform);
+	struct cg_output *output = output_init(server, wlr_output, server->transform);
 	if (!output) {
 		return;
 	}
@@ -250,9 +250,9 @@ parse_args(struct cg_server *server, int argc, char *argv[])
 			server->xdg_decoration = true;
 			break;
 		case 'r':
-			server->output_transform++;
-			if (server->output_transform > WL_OUTPUT_TRANSFORM_270) {
-				server->output_transform = WL_OUTPUT_TRANSFORM_NORMAL;
+			server->transform++;
+			if (server->transform > WL_OUTPUT_TRANSFORM_270) {
+				server->transform = WL_OUTPUT_TRANSFORM_NORMAL;
 			}
 			break;
 #ifdef DEBUG
