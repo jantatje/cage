@@ -28,7 +28,7 @@ struct cg_server {
 
 	struct wlr_output_layout *output_layout;
 	struct wl_list outputs;
-	struct wl_listener new_output;
+	struct wl_listener output_new;
 	struct wl_listener output_destroy;
 
 	struct wl_listener xdg_toplevel_decoration;

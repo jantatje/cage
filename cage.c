@@ -72,7 +72,7 @@ handle_output_destroy(struct wl_listener *listener, void *data)
 static void
 handle_output_new(struct wl_listener *listener, void *data)
 {
-	struct cg_server *server = wl_container_of(listener, server, new_output);
+	struct cg_server *server = wl_container_of(listener, server, output_new);
 	struct wlr_output *wlr_output = data;
 
 	struct cg_output *output = output_init(server, wlr_output, server->output_transform);
@@ -373,8 +373,8 @@ main(int argc, char *argv[])
 
 	/* Configure a listener to be notified when new outputs are
 	 * available on the backend. */
-	server.new_output.notify = handle_output_new;
-	wl_signal_add(&backend->events.new_output, &server.new_output);
+	server.output_new.notify = handle_output_new;
+	wl_signal_add(&backend->events.new_output, &server.output_new);
 	server.output_destroy.notify = handle_output_destroy;
 
 	server.seat = seat_create(&server, backend);
