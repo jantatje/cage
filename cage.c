@@ -50,6 +50,47 @@
 #include "xwayland.h"
 #endif
 
+static void
+handle_output_destroy(struct wl_listener *listener, void *data)
+{
+	struct cg_server *server = wl_container_of(listener, server, output_destroy);
+	struct cg_output *output = data;
+
+	wl_list_remove(&output->link);
+	wlr_output_layout_remove(server->output_layout, output->wlr_output);
+
+	struct cg_view *view;
+	wl_list_for_each (view, &server->views, link) {
+		view_position(view);
+	}
+
+	if (wl_list_empty(&server->outputs)) {
+		wl_display_terminate(server->wl_display);
+	}
+}
+
+static void
+handle_output_new(struct wl_listener *listener, void *data)
+{
+	struct cg_server *server = wl_container_of(listener, server, new_output);
+	struct wlr_output *wlr_output = data;
+
+	struct cg_output *output = output_init(server, wlr_output, server->output_transform);
+	if (!output) {
+		return;
+	}
+
+	wl_list_insert(&server->outputs, &output->link);
+	wlr_output_layout_add_auto(server->output_layout, wlr_output);
+
+	struct cg_view *view;
+	wl_list_for_each (view, &output->server->views, link) {
+		view_position(view);
+	}
+
+	wl_signal_add(&output->events.destroy, &server->output_destroy);
+}
+
 static int
 sigchld_handler(int fd, uint32_t mask, void *data)
 {
@@ -331,10 +372,10 @@ main(int argc, char *argv[])
 	}
 
 	/* Configure a listener to be notified when new outputs are
-	 * available on the backend. We use this only to detect the
-	 * first output and ignore subsequent outputs. */
-	server.new_output.notify = handle_new_output;
+	 * available on the backend. */
+	server.new_output.notify = handle_output_new;
 	wl_signal_add(&backend->events.new_output, &server.new_output);
+	server.output_destroy.notify = handle_output_destroy;
 
 	server.seat = seat_create(&server, backend);
 	if (!server.seat) {

@@ -357,27 +357,15 @@ handle_output_mode(struct wl_listener *listener, void *data)
 static void
 output_destroy(struct cg_output *output)
 {
-	struct cg_server *server = output->server;
+	wl_signal_emit(&output->events.destroy, output);
 
 	wl_list_remove(&output->destroy.link);
 	wl_list_remove(&output->mode.link);
 	wl_list_remove(&output->transform.link);
 	wl_list_remove(&output->damage_frame.link);
 	wl_list_remove(&output->damage_destroy.link);
-	wl_list_remove(&output->link);
-
-	wlr_output_layout_remove(server->output_layout, output->wlr_output);
-
-	struct cg_view *view;
-	wl_list_for_each (view, &output->server->views, link) {
-		view_position(view);
-	}
 
 	free(output);
-
-	if (wl_list_empty(&server->outputs)) {
-		wl_display_terminate(server->wl_display);
-	}
 }
 
 static void
@@ -395,22 +383,19 @@ handle_output_destroy(struct wl_listener *listener, void *data)
 	output_destroy(output);
 }
 
-void
-handle_new_output(struct wl_listener *listener, void *data)
+struct cg_output *
+output_init(struct cg_server *server, struct wlr_output *wlr_output, enum wl_output_transform output_transform)
 {
-	struct cg_server *server = wl_container_of(listener, server, new_output);
-	struct wlr_output *wlr_output = data;
-
 	struct cg_output *output = calloc(1, sizeof(struct cg_output));
 	if (!output) {
 		wlr_log(WLR_ERROR, "Failed to allocate output");
-		return;
+		return NULL;
 	}
 
 	output->wlr_output = wlr_output;
 	output->server = server;
 	output->damage = wlr_output_damage_create(wlr_output);
-	wl_list_insert(&server->outputs, &output->link);
+	wl_signal_init(&output->events.destroy);
 
 	output->mode.notify = handle_output_mode;
 	wl_signal_add(&wlr_output->events.mode, &output->mode);
@@ -427,13 +412,7 @@ handle_new_output(struct wl_listener *listener, void *data)
 	if (preferred_mode) {
 		wlr_output_set_mode(wlr_output, preferred_mode);
 	}
-	wlr_output_set_transform(wlr_output, server->output_transform);
-	wlr_output_layout_add_auto(server->output_layout, wlr_output);
-
-	struct cg_view *view;
-	wl_list_for_each (view, &output->server->views, link) {
-		view_position(view);
-	}
+	wlr_output_set_transform(wlr_output, output_transform);
 
 	if (wlr_xcursor_manager_load(server->seat->xcursor_manager, wlr_output->scale)) {
 		wlr_log(WLR_ERROR, "Cannot load XCursor theme for output '%s' with scale %f", wlr_output->name,
@@ -444,6 +423,8 @@ handle_new_output(struct wl_listener *listener, void *data)
 	wlr_output_commit(wlr_output);
 
 	wlr_output_damage_add_whole(output->damage);
+
+	return output;
 }
 
 void
