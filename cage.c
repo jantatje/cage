@@ -51,6 +51,28 @@
 #endif
 
 static void
+handle_output_mode(struct wl_listener *listener, void *data)
+{
+	struct cg_server *server = wl_container_of(listener, server, output_mode);
+
+	struct cg_view *view;
+	wl_list_for_each (view, &server->views, link) {
+		view_position(view);
+	}
+}
+
+static void
+handle_output_transform(struct wl_listener *listener, void *data)
+{
+	struct cg_server *server = wl_container_of(listener, server, output_transform);
+
+	struct cg_view *view;
+	wl_list_for_each (view, &server->views, link) {
+		view_position(view);
+	}
+}
+
+static void
 handle_output_destroy(struct wl_listener *listener, void *data)
 {
 	struct cg_server *server = wl_container_of(listener, server, output_destroy);
@@ -88,6 +110,8 @@ handle_output_new(struct wl_listener *listener, void *data)
 		view_position(view);
 	}
 
+	wl_signal_add(&output->events.mode, &server->output_mode);
+	wl_signal_add(&output->events.transform, &server->output_transform);
 	wl_signal_add(&output->events.destroy, &server->output_destroy);
 }
 
@@ -375,6 +399,8 @@ main(int argc, char *argv[])
 	 * available on the backend. */
 	server.output_new.notify = handle_output_new;
 	wl_signal_add(&backend->events.new_output, &server.output_new);
+	server.output_mode.notify = handle_output_mode;
+	server.output_transform.notify = handle_output_transform;
 	server.output_destroy.notify = handle_output_destroy;
 
 	server.seat = seat_create(&server, backend);

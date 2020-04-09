@@ -21,6 +21,8 @@ struct cg_output {
 	struct wl_listener damage_destroy;
 
 	struct {
+		struct wl_signal mode;
+		struct wl_signal transform;
 		struct wl_signal destroy;
 	} events;
 };

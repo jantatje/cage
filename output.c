@@ -333,10 +333,7 @@ handle_output_transform(struct wl_listener *listener, void *data)
 		return;
 	}
 
-	struct cg_view *view;
-	wl_list_for_each (view, &output->server->views, link) {
-		view_position(view);
-	}
+	wl_signal_emit(&output->events.transform, output);
 }
 
 static void
@@ -348,10 +345,7 @@ handle_output_mode(struct wl_listener *listener, void *data)
 		return;
 	}
 
-	struct cg_view *view;
-	wl_list_for_each (view, &output->server->views, link) {
-		view_position(view);
-	}
+	wl_signal_emit(&output->events.mode, output);
 }
 
 static void
@@ -395,6 +389,8 @@ output_init(struct cg_server *server, struct wlr_output *wlr_output, enum wl_out
 	output->wlr_output = wlr_output;
 	output->server = server;
 	output->damage = wlr_output_damage_create(wlr_output);
+	wl_signal_init(&output->events.mode);
+	wl_signal_init(&output->events.transform);
 	wl_signal_init(&output->events.destroy);
 
 	output->mode.notify = handle_output_mode;
