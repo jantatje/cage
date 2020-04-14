@@ -54,7 +54,7 @@ struct surface_iterator_data {
 };
 
 static bool
-intersects_with_output(struct cg_output *output, struct wlr_output_layout *output_layout, struct wlr_box *surface_box)
+intersects_with_output(struct cg_output *output, struct wlr_box *surface_box)
 {
 	/* Since the surface_box's x- and y-coordinates are already output local,
 	 * the x- and y-coordinates of this box need to be 0 for this function to
@@ -83,7 +83,7 @@ output_for_each_surface_iterator(struct wlr_surface *surface, int sx, int sy, vo
 		.height = surface->current.height,
 	};
 
-	if (!intersects_with_output(output, output->server->output_layout, &surface_box)) {
+	if (!intersects_with_output(output, &surface_box)) {
 		return;
 	}
 
