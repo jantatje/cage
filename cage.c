@@ -51,6 +51,23 @@
 #endif
 
 static void
+handle_output_layout_change(struct wl_listener *listener, void *data)
+{
+	struct cg_server *server = wl_container_of(listener, server, output_layout_change);
+
+	wlr_log(WLR_DEBUG, "output layout changes");
+
+	struct cg_output *output;
+	struct wlr_output_layout_output *layout;
+	wl_list_for_each (output, &server->outputs, link) {
+		layout = wlr_output_layout_get(server->output_layout, output->wlr_output);
+		if (layout) {
+			output_set_position(output, layout->x, layout->y);
+		}
+	}
+}
+
+static void
 handle_output_mode(struct wl_listener *listener, void *data)
 {
 	struct cg_server *server = wl_container_of(listener, server, output_mode);
@@ -380,6 +397,8 @@ main(int argc, char *argv[])
 		ret = 1;
 		goto end;
 	}
+	server.output_layout_change.notify = handle_output_layout_change;
+	wl_signal_add(&server.output_layout->events.change, &server.output_layout_change);
 
 	compositor = wlr_compositor_create(server.wl_display, renderer);
 	if (!compositor) {

@@ -14,6 +14,9 @@ struct cg_output {
 	struct wlr_output_damage *damage;
 	struct wl_list link; // cg_server::outputs
 
+	/* The output's position in the output layout, in layout coordinates. */
+	double lx, ly;
+
 	struct wl_listener mode;
 	struct wl_listener transform;
 	struct wl_listener destroy;
@@ -39,5 +42,6 @@ void output_drag_icons_for_each_surface(struct cg_output *output, struct wl_list
 					cg_surface_iterator_func_t iterator, void *user_data);
 void output_damage_surface(struct cg_output *output, struct wlr_surface *surface, double lx, double ly, bool whole);
 void output_set_window_title(struct cg_output *output, const char *title);
+void output_set_position(struct cg_output *output, double lx, double ly);
 
 #endif

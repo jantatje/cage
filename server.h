@@ -27,6 +27,8 @@ struct cg_server {
 	struct wl_list inhibitors;
 
 	struct wlr_output_layout *output_layout;
+	struct wl_listener output_layout_change;
+
 	struct wl_list outputs;
 	struct wl_listener output_new;
 	struct wl_listener output_mode;

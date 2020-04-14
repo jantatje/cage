@@ -25,7 +25,6 @@
 #include <wlr/types/wlr_matrix.h>
 #include <wlr/types/wlr_output.h>
 #include <wlr/types/wlr_output_damage.h>
-#include <wlr/types/wlr_output_layout.h>
 #include <wlr/types/wlr_surface.h>
 #include <wlr/types/wlr_xdg_shell.h>
 #include <wlr/util/log.h>
@@ -113,11 +112,10 @@ output_view_for_each_surface(struct cg_output *output, struct cg_view *view, cg_
 		.user_iterator = iterator,
 		.user_data = user_data,
 		.output = output,
-		.ox = view->lx,
-		.oy = view->ly,
+		.ox = view->lx - output->lx,
+		.oy = view->ly - output->ly,
 	};
 
-	wlr_output_layout_output_coords(output->server->output_layout, output->wlr_output, &data.ox, &data.oy);
 	view_for_each_surface(view, output_for_each_surface_iterator, &data);
 }
 
@@ -129,11 +127,10 @@ output_view_for_each_popup(struct cg_output *output, struct cg_view *view, cg_su
 		.user_iterator = iterator,
 		.user_data = user_data,
 		.output = output,
-		.ox = view->lx,
-		.oy = view->ly,
+		.ox = view->lx - output->lx,
+		.oy = view->ly - output->ly,
 	};
 
-	wlr_output_layout_output_coords(output->server->output_layout, output->wlr_output, &data.ox, &data.oy);
 	view_for_each_popup(view, output_for_each_surface_iterator, &data);
 }
 
@@ -144,9 +141,8 @@ output_drag_icons_for_each_surface(struct cg_output *output, struct wl_list *dra
 	struct cg_drag_icon *drag_icon;
 	wl_list_for_each (drag_icon, drag_icons, link) {
 		if (drag_icon->wlr_drag_icon->mapped) {
-			double ox = drag_icon->lx;
-			double oy = drag_icon->ly;
-			wlr_output_layout_output_coords(output->server->output_layout, output->wlr_output, &ox, &oy);
+			double ox = drag_icon->lx - output->lx;
+			double oy = drag_icon->ly - output->ly;
 			output_surface_for_each_surface(output, drag_icon->wlr_drag_icon->surface, ox, oy, iterator,
 							user_data);
 		}
@@ -270,8 +266,8 @@ damage_surface_iterator(struct cg_output *output, struct wlr_surface *surface, s
 void
 output_damage_surface(struct cg_output *output, struct wlr_surface *surface, double lx, double ly, bool whole)
 {
-	double ox = lx, oy = ly;
-	wlr_output_layout_output_coords(output->server->output_layout, output->wlr_output, &ox, &oy);
+	double ox = lx - output->lx;
+	double oy = ly - output->ly;
 	output_surface_for_each_surface(output, surface, ox, oy, damage_surface_iterator, &whole);
 }
 
@@ -435,4 +431,11 @@ output_set_window_title(struct cg_output *output, const char *title)
 		wlr_x11_output_set_title(wlr_output, title);
 #endif
 	}
+}
+
+void
+output_set_position(struct cg_output *output, double lx, double ly)
+{
+	output->lx = lx;
+	output->ly = ly;
 }
