@@ -121,6 +121,8 @@ endif
 
 cageng_sources = [
   'desktop/output.c',
+  'desktop/renderer.c',
+  'desktop/util.c',
   'desktop/view.c',
   'desktop/xdg_shell.c',
   'cageng.c',
@@ -128,6 +130,8 @@ cageng_sources = [
 
 cageng_headers = [
   'desktop/output.h',
+  'desktop/renderer.h',
+  'desktop/util.h',
   'desktop/view.h',
   'desktop/xdg_shell.h',
   'serverng.h',
